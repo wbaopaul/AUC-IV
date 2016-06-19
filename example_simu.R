@@ -84,7 +84,7 @@ rept_run_simu = cmpfun(rept_run_simu)
 ## run scenario  ####
 
 # specify the scenario you want to run, for example
-scenario = 'scenarioII'
+scenario = 'scenarioI'
 
 if( !grepl(scenario, pattern = 'scenarioVI') & 
       !grepl(scenario, pattern = 'scenarioM')){

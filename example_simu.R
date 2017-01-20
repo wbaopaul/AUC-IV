@@ -14,13 +14,14 @@ source("auc_IV_source.R")
 ## run simulation B times ####
 
 
+
 rept_run_simu <- function(n = 200,  B=500, scenario, 
                           cova.id1 = 1, cova.id2 = 1, em_run){
   ## cova.id1 -- the covaraites ids used in disease model
   ## cova.id2 -- the covariates ids used in verification model
   
   out_auc = matrix(0, B, 5)
-  asym_var = rep(0, B)
+  asym_var = out_auc
   set.seed(1)
   i = 0
   repeat{
@@ -43,38 +44,49 @@ rept_run_simu <- function(n = 200,  B=500, scenario,
     k2 = ncol(cova2)
     
     # try different initial parameters for phi
-    
-    
     init_phi = rep(0, k2 + 2)
     init_phi[1] = 1
-    mu = mu_est(yr, R, cova1)
-    temp_res = phi_EM_nleqslv(init_phi, mu, yr, R, cova1, cova2, em_run)
+    
+    tmp_iv = est_auc_iv(init_phi, yr, R, cova1, cova2, xid = 1, em_run)
 
+    inits = rep(0, 2*k1 + 3)
+    inits[1] = -1
+    tmp_lzh = est_auc_lzh(inits, yr, R, cova1, cova1, xid = 1)
+    tmp_ig = est_auc_ig(yr, R, cova1, xid = 1)
+    tmp_v = est_auc_v(yr, R, cova1[, 1])
+    tmp_f = est_auc_f(y, cova1[, 1])
+
+    out_auc[i, 1] = tmp_iv[1]
+    asym_var[i, 1] = tmp_iv[2]
+
+    out_auc[i, 2] = tmp_ig[1]
+    asym_var[i, 2] = tmp_ig[2]
+
+    out_auc[i, 3] = tmp_v[1]
+    asym_var[i, 3] = tmp_v[2]
     
-    phi = temp_res$phi
-    
-    temp = phi[1] + phi[k2 + 1] * yr
-    for(j in 1:k2) temp = temp + phi[1 + j] * cova2[, j]
-    pi_hat = 1/(1 + exp(temp))
-    
-    out_auc[i, 1:4] = auc_est(pi_hat, yr, R, xid=1, cova1)
-    
-    ## the full estimator (as if all y are observed)
-    out_auc[i, 5] = auc(y, x)
-    
-    asym_var[i] = Cvar_est_alter(pi_hat, mu, phi, yr, R, cova1, cova2,
-                                 out_auc[i, 1])
+    out_auc[i, 4] = tmp_lzh[1]
+    asym_var[i, 4] = tmp_lzh[2]
+
+    out_auc[i, 5] = tmp_f[1]
+    asym_var[i, 5] = tmp_f[2]
+
     if(i == B)  break
   }
   
   colnames(out_auc) = c('A-iv', 'A-ig', 'A-v', 'A-fp', 'A-f')
   
-  #save results in file
-  #filename1 = paste('./', 'result1_for_n=', n,  '_scneario=', scenario,  '.Rdata', sep='')
-  #save(out_auc, asym_var, file = filename1)
   
   bias = apply(out_auc, 2, mean) - mean(out_auc[, 5])
   vars = apply(out_auc, 2, var)
+  
+  ## save results in file
+  filename1 = paste('./', 'result1_for_n=', n,  '_scneario=', scenario,  '.Rdata', sep='')
+  save(out_auc, asym_var, file = filename1)
+  
+  ## calculate coverage probability
+  
+  
   return(rbind(bias, vars))
 }
 rept_run_simu = cmpfun(rept_run_simu)
@@ -84,10 +96,12 @@ rept_run_simu = cmpfun(rept_run_simu)
 ## run scenario  ####
 
 # specify the scenario you want to run, for example
-scenario = 'scenarioI'
+args = commandArgs(T)
+
+scenario = args[1]
 
 if( !grepl(scenario, pattern = 'scenarioVI') & 
-      !grepl(scenario, pattern = 'scenarioM')){
+    !grepl(scenario, pattern = 'scenarioM')){
   cova.id1 = 1:2     
   cova.id2 = cova.id1[-2]
 }
@@ -108,3 +122,4 @@ B = 500       ## number of data sets for each scenario
 em_run = 500  ## maximum number of repeats for EM
 rept_run_simu(200,  B, scenario, cova.id1, cova.id2, em_run)
 rept_run_simu(2000,  B, scenario, cova.id1, cova.id2, em_run)
+

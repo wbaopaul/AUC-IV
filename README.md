@@ -1,5 +1,5 @@
 # AUC_IV
-Estimation of AUC under not at random missingness using instrumental variable
+Estimatg AUC using instrumental variable approach when the missingness is nonignorable (not at random)
 
 
 # Notice

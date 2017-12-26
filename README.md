@@ -3,7 +3,7 @@ Estimation of AUC under not at random missingness using instrumental variable
 
 
 # Notice
-This fold provides R codes for the paper submitted.
+This fold provides R codes for the paper submitted to *Statistica Sinica*.
 
 **Title**: Estimation of Area Under the ROC Curve (AUC) under nonignorable verification bias
 
